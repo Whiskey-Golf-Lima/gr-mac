@@ -80,6 +80,7 @@ class simple_mac(gr.basic_block):
         self.arq_retxed = 0                                #how many times we've retransmitted
         self.failed_arq = 0
         self.max_attempts = max_attempts
+        self.rx_byte_count = 0
         
         self.arq_channel_state = ARQ_CHANNEL_IDLE
         self.expected_arq_id = -1                        #arq id we're expected to get ack for      
@@ -123,6 +124,9 @@ class simple_mac(gr.basic_block):
         self.message_port_register_out(pmt.intern('ctrl_out'))
         self.message_port_register_in(pmt.intern('ctrl_in'))
         self.set_msg_handler(pmt.intern('ctrl_in'), self.ctrl_rx)
+    
+    def get_rx_byte_count(self):
+        return self.rx_byte_count
     
     def general_work(self, input_items, output_items):
     #    return self.work(input_items, output_items)
@@ -307,7 +311,7 @@ class simple_mac(gr.basic_block):
             control_field = data[PKT_INDEX_CTRL]
             pkt_cnt = data[PKT_INDEX_CNT]
             dest_addr = data[PKT_INDEX_DEST]
-            
+            self.rx_byte_count += len(data)
             if not control_field in [ARQ_REQ, ARQ_NO_REQ]:
                 print "Bad control field: %d" % (control_field)
                 return
