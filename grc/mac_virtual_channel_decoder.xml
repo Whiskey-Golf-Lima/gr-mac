@@ -27,6 +27,7 @@
 		<name>out</name>
 		<type>message</type>
 		<nports>$channel_count</nports>
+        <optional>1</optional>
 	</source>
 
 	<doc>Channel count can be length of Channel map + 1 (extra port will be all channel IDs that aren't in the Channel map).
