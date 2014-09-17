@@ -193,10 +193,12 @@ class packet_to_pdu(gr.basic_block):
         if self.thread is None:
             self.thread = msg_to_pdu_thread(self.msgq, self.post_data)
             self.thread.start()
+        return True
     def stop(self):
         if self.thread:
             self.thread.stop()
             self.thread = None
+        return True
     def __del__(self):
         self.stop()
 
