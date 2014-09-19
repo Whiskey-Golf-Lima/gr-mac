@@ -177,7 +177,6 @@ class packet_to_pdu(gr.basic_block):
         self.dewhiten = dewhiten
         self.output_invalid = output_invalid
         self.thread = None
-        self.start()
     def post_data(self, data, type=None, arg1=None, arg2=None):
         ok, payload = packet_utils.unmake_packet(data, int(arg1), self.dewhiten)
         if not ok:
@@ -193,10 +192,12 @@ class packet_to_pdu(gr.basic_block):
         if self.thread is None:
             self.thread = msg_to_pdu_thread(self.msgq, self.post_data)
             self.thread.start()
+        return True
     def stop(self):
         if self.thread:
             self.thread.stop()
             self.thread = None
+        return True
     def __del__(self):
         self.stop()
 
