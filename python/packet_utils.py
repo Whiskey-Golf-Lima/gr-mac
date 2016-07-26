@@ -18,6 +18,8 @@
 # the Free Software Foundation, Inc., 51 Franklin Street,
 # Boston, MA 02110-1301, USA.
 # 
+#v1.1 - modifications to improve efficiency and utilize built in python 
+#tools while minimizing loops. github.com/Whiskey-Golf-Lima
 
 import struct
 import numpy
@@ -27,15 +29,13 @@ import crc
 def conv_packed_binary_string_to_1_0_string(s):
     """
     '\xAF' --> '10101111'
+    v1.1    modified to limit use of loops and utilize built in python tools
     """
-    r = []
+    r = ''
     for ch in s:
-        x = ord(ch)
-        for i in range(7,-1,-1):
-            t = (x >> i) & 0x1
-            r.append(t)
+        r += format(ord(ch),'b').zfill(8)
+    return r
 
-    return ''.join(map(lambda x: chr(x + ord('0')), r))
 
 def conv_1_0_string_to_packed_binary_string(s):
     """
@@ -44,28 +44,24 @@ def conv_1_0_string_to_packed_binary_string(s):
     Basically the inverse of conv_packed_binary_string_to_1_0_string,
     but also returns a flag indicating if we had to pad with leading zeros
     to get to a multiple of 8.
+    
+    v1.1    modified to limit use of loops and utilize built in python tools
     """
     if not is_1_0_string(s):
         raise ValueError, "Input must be a string containing only 0's and 1's"
     
-    # pad to multiple of 8
-    padded = False
     rem = len(s) % 8
-    if rem != 0:
-        npad = 8 - rem
-        s = '0' * npad + s
-        padded = True
+    padded=True*rem
+    if padded:
+        s = '0'*(8-rem)+s
 
     assert len(s) % 8 == 0
-
+    s = ''.join(map(lambda x: chr(ord(x)-ord('0')),s))
     r = []
-    i = 0
-    while i < len(s):
-        t = 0
-        for j in range(8):
-            t = (t << 1) | (ord(s[i + j]) - ord('0'))
-        r.append(chr(t))
-        i += 8
+    while s:
+        r.append(chr(int(s[:8],2)))
+        s = s[8:]
+
     return (''.join(r), padded)
         
 
@@ -109,8 +105,8 @@ def make_packet(payload, samples_per_symbol, bits_per_symbol,
 
     Args:
         payload: packet payload, len [0, 4096]
-        samples_per_symbol: samples per symbol (needed for padding calculation) (int)
-        bits_per_symbol: (needed for padding calculation) (int)
+        samples_per_symbol: samples per symbol (needed for padding calculation) (int) - grant - set to 0 by packet framer
+        bits_per_symbol: (needed for padding calculation) (int) - grant - set to 0 by packet framer
         preamble: string of ascii 0's and 1's
         access_code: string of ascii 0's and 1's
         whitener_offset: offset into whitener string to use [0-16)
